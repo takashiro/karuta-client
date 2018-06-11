@@ -20,7 +20,9 @@ const net = {
 	Speak: 0xB,
 	LoadGame: 0xC,
 
-	// Sanguosha Commands
+	Notify: 0xD,
+	Request: 0xE,
+	Reply: 0xF,
 };
 
 export default net;

@@ -3,6 +3,7 @@
 import EventEmitter from 'events';
 
 import Packet from './Packet';
+import net from './cmd';
 
 class Client extends EventEmitter {
 
@@ -17,6 +18,18 @@ class Client extends EventEmitter {
 		this.socket = null;
 
 		this.onmessage = new Map;
+
+		this.onnotify = new Map;
+		this.bind(net.Notify, msg => {
+			if (!msg || !msg.cmd) {
+				return;
+			}
+
+			const handler = this.onnotify.get(msg.cmd);
+			if (handler) {
+				handler(msg.arg);
+			}
+		});
 	}
 
 	/**
@@ -112,16 +125,28 @@ class Client extends EventEmitter {
 	}
 
 	/**
-	 * Send a request to server
+	 * Send a command to server
 	 * @param {number} command
 	 * @param {object} args
 	 */
-	request(command, args = null) {
+	send(command, args = null) {
 		let packet = new Packet;
 		packet.command = command;
 		packet.arguments = args;
 		packet.timeout = 0;
 		this.socket.send(packet.toJSON());
+	}
+
+	/**
+	 * Send a notification to server
+	 * @param {number} command
+	 * @param {object} args
+	 */
+	notify(command, args = null) {
+		this.send(net.Notify, {
+			cmd: command,
+			arg: args,
+		});
 	}
 
 	/**
@@ -151,6 +176,20 @@ class Client extends EventEmitter {
 	 */
 	unbind(command) {
 		this.onmessage.delete(command);
+	}
+
+	/**
+	 * Watch a notification from server
+	 */
+	watch(command, handler) {
+		this.onnotify.set(command, handler);
+	}
+
+	/**
+	 * Do not watch a notification from server
+	 */
+	unwatch(command) {
+		this.onnotify.delete(command);
 	}
 
 };

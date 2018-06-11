@@ -7,15 +7,13 @@ class Packet {
 	 */
 	constructor(data = null){
 		this.command = 0;
-		this.timeout = 0;
 		this.arguments = null;
 		if (data) {
 			try {
 				data = JSON.parse(data);
 				if (data instanceof Array) {
 					this.command = data[0];
-					this.timeout = data[1];
-					this.arguments = data[2];
+					this.arguments = data[1];
 				}
 			} catch (error) {
 				alert(error);
@@ -28,11 +26,11 @@ class Packet {
 	 * @return {string} JSON string
 	 */
 	toJSON(){
-		return JSON.stringify([
-			this.command,
-			this.timeout,
-			this.arguments
-		]);
+		let json = [this.command];
+		if (this.arguments !== undefined && this.arguments !== null) {
+			json.push(this.arguments);
+		}
+		return JSON.stringify(json);
 	}
 
 }
