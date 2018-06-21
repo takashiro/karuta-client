@@ -3,7 +3,6 @@
 import EventEmitter from 'events';
 
 import Packet from './Packet';
-import net from './cmd';
 
 class Client extends EventEmitter {
 
@@ -18,18 +17,7 @@ class Client extends EventEmitter {
 		this.socket = null;
 
 		this.onmessage = new Map;
-
-		this.onnotify = new Map;
-		this.bind(net.Notify, msg => {
-			if (!msg || !msg.cmd) {
-				return;
-			}
-
-			const handler = this.onnotify.get(msg.cmd);
-			if (handler) {
-				handler(msg.arg);
-			}
-		});
+		this.timeout = 10000;
 	}
 
 	/**
@@ -66,8 +54,11 @@ class Client extends EventEmitter {
 	 * Connect to a server
 	 * @param {string} url server URL
 	 */
-	connect(url) {
-		this.setUrl(url);
+	connect(url = null) {
+		if (url) {
+			this.setUrl(url);
+		}
+
 		if (!this.url) {
 			return false;
 		}
@@ -138,14 +129,15 @@ class Client extends EventEmitter {
 	}
 
 	/**
-	 * Send a notification to server
+	 * Send a command to server and wait for its reply
 	 * @param {number} command
 	 * @param {object} args
 	 */
-	notify(command, args = null) {
-		this.send(net.Notify, {
-			cmd: command,
-			arg: args,
+	request(command, args = null) {
+		return new Promise((resolve, reject) => {
+			this.bind(command, resolve, {once: true});
+			this.send(command, args);
+			setTimeout(reject, this.timeout, 'Command timed out.');
 		});
 	}
 
@@ -155,9 +147,21 @@ class Client extends EventEmitter {
 	 * @param {object} args
 	 */
 	trigger(command, args = null) {
-		let handler = this.onmessage.get(command);
-		if (handler) {
-			handler.call(this, args);
+		let handlers = this.onmessage.get(command);
+		if (handlers) {
+			for (let handler of handlers) {
+				handler.call(this, args);
+			}
+
+			let removed = [];
+			for (let handler of handlers) {
+				if (handler.once) {
+					removed.push(handler);
+				}
+			}
+			for (let handler of removed) {
+				handlers.delete(handler);
+			}
 		}
 	}
 
@@ -165,31 +169,35 @@ class Client extends EventEmitter {
 	 * Bind a message handler
 	 * @param {number} command
 	 * @param {Function} callback
+	 * @param {object} options
 	 */
-	bind(command, callback) {
-		this.onmessage.set(command, callback);
+	bind(command, callback, options = null) {
+		let handlers = this.onmessage.get(command);
+		if (!handlers) {
+			handlers = new Set;
+			this.onmessage.set(command, handlers);
+		}
+
+		if (options && options.once) {
+			callback.once = true;
+		}
+		handlers.add(callback);
 	}
 
 	/**
 	 * Unbind a message handler
 	 * @param {number} command
+	 * @param {Function} callback
 	 */
-	unbind(command) {
-		this.onmessage.delete(command);
-	}
-
-	/**
-	 * Watch a notification from server
-	 */
-	watch(command, handler) {
-		this.onnotify.set(command, handler);
-	}
-
-	/**
-	 * Do not watch a notification from server
-	 */
-	unwatch(command) {
-		this.onnotify.delete(command);
+	unbind(command, callback = null) {
+		if (!callback) {
+			this.onmessage.delete(command);
+		} else {
+			let handlers = this.onmessage.get(command);
+			if (handlers) {
+				handlers.delete(callback);
+			}
+		}
 	}
 
 };

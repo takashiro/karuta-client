@@ -20,9 +20,7 @@ const net = {
 	Speak: 0xB,
 	LoadGame: 0xC,
 
-	Notify: 0xD,
-	Request: 0xE,
-	Reply: 0xF,
+	CommandCount: 0xD,
 };
 
 export default net;
