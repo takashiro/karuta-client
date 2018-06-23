@@ -1,26 +1,26 @@
 
-const net = {
+import Enum from './Enum';
+
+const net = new Enum(
 	// Common commands
-	Invalid : 0x0,
+	'Invalid',
 
-	CheckVersion: 0x1,
+	'CheckVersion',
 
-	Login: 0x2,
-	Logout: 0x3,
+	'Login',
+	'Logout',
 
-	CreateRoom: 0x4,
-	EnterRoom: 0x5,
-	LeaveRoom: 0x6,
-	UpdateRoom: 0x7,
+	'CreateRoom',
+	'EnterRoom',
+	'LeaveRoom',
+	'UpdateRoom',
 
-	SetUserList: 0x8,
-	AddUser: 0x9,
-	RemoveUser: 0xA,
+	'SetUserList',
+	'AddUser',
+	'RemoveUser',
 
-	Speak: 0xB,
-	LoadGame: 0xC,
-
-	CommandCount: 0xD,
-};
+	'Speak',
+	'LoadGame',
+);
 
 export default net;
