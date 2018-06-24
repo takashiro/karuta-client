@@ -53,6 +53,7 @@ class Client extends EventEmitter {
 	/**
 	 * Connect to a server
 	 * @param {string} url server URL
+	 * @return {Promise}
 	 */
 	connect(url = null) {
 		if (url) {
@@ -60,39 +61,52 @@ class Client extends EventEmitter {
 		}
 
 		if (!this.url) {
-			return false;
+			return Promise.reject('No Url is defined.');
 		}
 
 		try {
 			this.socket = new WebSocket(this.url);
 		} catch (error) {
 			this.emit('error', error.message);
-			return;
+			return Promise.reject(error);
 		}
 
-		this.socket.onopen = () => {
-			this.emit('open');
-		};
 		this.socket.onmessage = e => {
 			let packet = new Packet(e.data);
 			this.trigger(packet.command, packet.arguments);
 		};
-		this.socket.onclose = e => {
-			this.emit('close', e);
-			this.socket = null;
-		};
 
-		return true;
+		return new Promise((resolve, reject) => {
+			this.socket.onopen = () => {
+				this.emit('open');
+				setTimeout(resolve, 0);
+			};
+			this.socket.onclose = e => {
+				this.emit('close', e);
+				this.socket = null;
+				setTimeout(reject, 0);
+			};
+		});
 	}
 
 	/**
 	 * Disconnect from the server
+	 * @return {Promise}
 	 */
-	disconnect(){
-		if(this.socket){
+	disconnect() {
+		if (this.socket) {
+			let disconnected = new Promise((resolve, reject) => {
+				this.once('close', resolve);
+				setTimeout(reject, 60000, 'Disconnection timed out.');
+			});
+
 			this.socket.close();
 			this.socket = null;
+
+			return disconnected;
 		}
+
+		return Promise.resolve();
 	}
 
 	/**
