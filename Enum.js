@@ -15,9 +15,9 @@ class Enum {
 	}
 
 	/**
-	 * Convert number into this enumeration
+	 * Convert number into this enumeration string
 	 * @param {number} num
-	 * @return {Enum}
+	 * @return {string}
 	 */
 	fromNum(num) {
 		return this.enums[num];
