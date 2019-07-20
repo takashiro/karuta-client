@@ -1,7 +1,6 @@
 
 
 import EventEmitter from 'events';
-
 import Packet from './Packet';
 
 class Client extends EventEmitter {
