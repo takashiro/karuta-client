@@ -4,7 +4,7 @@
   "description": "Client common classes of Karuta Server",
   "main": "index.js",
   "scripts": {
-    "test": ""
+    "test": "eslint ."
   },
   "repository": {
     "type": "git",
@@ -20,7 +20,9 @@
     "url": "https://github.com/takashiro/karuta-node-client/issues"
   },
   "homepage": "https://github.com/takashiro/karuta-node-client#readme",
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^6.0.1"
+  },
   "dependencies": {
     "events": "^3.0.0"
   }
