@@ -17,6 +17,8 @@ class Client extends EventEmitter {
 
 		this.onmessage = new Map;
 		this.timeout = 10000;
+		this.currentCommand = null;
+		this.commandSerial = 1;
 	}
 
 	/**
@@ -160,21 +162,25 @@ class Client extends EventEmitter {
 	 * @param {object} args
 	 */
 	trigger(command, args = null) {
-		let handlers = this.onmessage.get(command);
-		if (handlers) {
-			for (let handler of handlers) {
-				handler.call(this, args);
-			}
+		const handlers = this.onmessage.get(command);
+		if (!handlers) {
+			return;
+		}
 
-			let removed = [];
-			for (let handler of handlers) {
-				if (handler.once) {
-					removed.push(handler);
-				}
+		this.currentCommand = command;
+
+		for (let handler of handlers) {
+			handler.call(this, args);
+		}
+
+		let removed = [];
+		for (let handler of handlers) {
+			if (handler.once) {
+				removed.push(handler);
 			}
-			for (let handler of removed) {
-				handlers.delete(handler);
-			}
+		}
+		for (let handler of removed) {
+			handlers.delete(handler);
 		}
 	}
 
@@ -211,6 +217,33 @@ class Client extends EventEmitter {
 				handlers.delete(callback);
 			}
 		}
+	}
+
+	/**
+	 * Create a locker for the current server command.
+	 * @return {object}
+	 */
+	lock() {
+		const command = this.currentCommand;
+		const serial = this.commandSerial++;
+		return {
+			command,
+			serial,
+		};
+	}
+
+	/**
+	 * Sends a command to server if it's still wanted.
+	 * @param {object} locker
+	 * @param {*} args
+	 * @return {boolean}
+	 */
+	reply(locker, args) {
+		if (locker.command !== this.currentCommand || locker.serial !== this.commandSerial) {
+			return false;
+		}
+
+		this.send(locker.command, args);
 	}
 
 }
