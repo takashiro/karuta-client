@@ -226,6 +226,7 @@ class Client extends EventEmitter {
 	lock() {
 		const command = this.currentCommand;
 		const serial = ++this.commandSerial;
+		this.emit('lockChanged');
 		return {
 			command,
 			serial,
