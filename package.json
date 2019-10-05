@@ -1,6 +1,6 @@
 {
   "name": "@karuta/client",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Client common classes of Karuta Server",
   "main": "index.js",
   "scripts": {
