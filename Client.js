@@ -16,7 +16,7 @@ class Client extends EventEmitter {
 		this.onmessage = new Map();
 		this.timeout = 10000;
 		this.currentCommand = null;
-		this.commandSerial = 1;
+		this.commandSerial = 0;
 	}
 
 	/**
@@ -60,7 +60,7 @@ class Client extends EventEmitter {
 		}
 
 		if (!this.url) {
-			return Promise.reject(new Error('No Url is defined.'));
+			return Promise.reject(new Error('No url is defined.'));
 		}
 
 		try {
@@ -83,7 +83,7 @@ class Client extends EventEmitter {
 			this.socket.onclose = (e) => {
 				this.emit('close', e);
 				this.socket = null;
-				setTimeout(reject, 0);
+				setTimeout(reject, 0, new Error('WebSocket is closed.'));
 			};
 		});
 	}
@@ -95,8 +95,11 @@ class Client extends EventEmitter {
 	disconnect() {
 		if (this.socket) {
 			const disconnected = new Promise((resolve, reject) => {
-				this.once('close', resolve);
-				setTimeout(reject, 60000, 'Disconnection timed out.');
+				const timer = setTimeout(reject, 60000, 'Disconnection timed out.');
+				this.once('close', function () {
+					clearTimeout(timer);
+					resolve();
+				});
 			});
 
 			this.socket.close();
@@ -113,7 +116,7 @@ class Client extends EventEmitter {
 	 * @param {boolean}
 	 */
 	get connected() {
-		return this.socket && this.socket.readyState === WebSocket.OPEN;
+		return Boolean(this.socket) && this.socket.readyState === WebSocket.OPEN;
 	}
 
 	/**
@@ -147,9 +150,12 @@ class Client extends EventEmitter {
 	 */
 	request(command, args = null) {
 		return new Promise((resolve, reject) => {
-			this.bind(command, resolve, { once: true });
+			const timer = setTimeout(reject, this.timeout, 'Command timed out.');
+			this.bind(command, (...res) => {
+				clearTimeout(timer);
+				resolve.call(this, ...res);
+			}, { once: true });
 			this.send(command, args);
-			setTimeout(reject, this.timeout, 'Command timed out.');
 		});
 	}
 
@@ -166,16 +172,15 @@ class Client extends EventEmitter {
 
 		this.currentCommand = command;
 
-		const removed = [];
-		for (const handler of handlers) {
+		let limit = handlers.length;
+		for (let i = 0; i < limit; i++) {
+			const handler = handlers[i];
 			handler.callback.call(this, args);
 			if (handler.options && handler.options.once) {
-				removed.push(handler);
+				handlers.splice(i, 1);
+				i--;
+				limit--;
 			}
-		}
-
-		for (const handler of removed) {
-			handlers.delete(handler);
 		}
 	}
 
@@ -192,7 +197,7 @@ class Client extends EventEmitter {
 			this.onmessage.set(command, handlers);
 		}
 
-		handlers.add({
+		handlers.push({
 			callback,
 			options,
 		});
