@@ -1,5 +1,9 @@
+/build/
+/test/
 /.github/
 /.eslintrc.json
 /.travis.yml
 /.gitignore
 /.npmignore
+/.babelrc
+/.mocharc.yaml

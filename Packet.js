@@ -14,7 +14,7 @@ class Packet {
 					[this.command, this.arguments] = params;
 				}
 			} catch (error) {
-				console.error(error);
+				this.error = error;
 			}
 		}
 	}

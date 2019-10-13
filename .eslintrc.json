@@ -13,17 +13,18 @@
         "sourceType": "module"
     },
     "rules": {
+		"func-names": "off",
         "indent": [
             "error",
             "tab"
 		],
-		"no-console": "off",
 		"no-tabs": "off",
 		"no-plusplus": "off",
 		"linebreak-style": "off",
 		"no-restricted-syntax": [
 			"error",
 			"WithStatement"
-		]
+		],
+		"prefer-arrow-callback": "off"
     }
 }
