@@ -1,10 +1,8 @@
 
-
 import EventEmitter from 'events';
 import Packet from './Packet';
 
 class Client extends EventEmitter {
-
 	/**
 	 * Create a client instance
 	 * @param {string} url Server URL
@@ -15,7 +13,7 @@ class Client extends EventEmitter {
 		this.setUrl(url);
 		this.socket = null;
 
-		this.onmessage = new Map;
+		this.onmessage = new Map();
 		this.timeout = 10000;
 		this.currentCommand = null;
 		this.commandSerial = 1;
@@ -27,23 +25,23 @@ class Client extends EventEmitter {
 	 */
 	setUrl(url) {
 		if (url) {
-			let absolute_path = /^\w+:\/\/.+/i;
-			if (absolute_path.test(url)) {
+			const absolutePath = /^\w+:\/\/.+/i;
+			if (absolutePath.test(url)) {
 				this.url = url;
 			} else {
-				let domain_split = url.indexOf('/');
+				const domainSplit = url.indexOf('/');
 				let domain = '';
 				let path = '';
-				if (domain_split == -1) {
+				if (domainSplit === -1) {
 					domain = url;
 				} else {
-					domain = url.substr(0, domain_split);
-					path = url.substr(domain_split + 1);
+					domain = url.substr(0, domainSplit);
+					path = url.substr(domainSplit + 1);
 				}
 				if (domain.indexOf(':') >= 0) {
-					this.url = 'ws://' + domain + '/' + path;
+					this.url = `ws://${domain}/${path}`;
 				} else {
-					this.url = 'ws://' + domain + ':2610/' + path;
+					this.url = `ws://${domain}:2610/${path}`;
 				}
 			}
 		} else {
@@ -62,7 +60,7 @@ class Client extends EventEmitter {
 		}
 
 		if (!this.url) {
-			return Promise.reject('No Url is defined.');
+			return Promise.reject(new Error('No Url is defined.'));
 		}
 
 		try {
@@ -72,8 +70,8 @@ class Client extends EventEmitter {
 			return Promise.reject(error);
 		}
 
-		this.socket.onmessage = e => {
-			let packet = new Packet(e.data);
+		this.socket.onmessage = (e) => {
+			const packet = new Packet(e.data);
 			this.trigger(packet.command, packet.arguments);
 		};
 
@@ -82,7 +80,7 @@ class Client extends EventEmitter {
 				this.emit('open');
 				setTimeout(resolve, 0);
 			};
-			this.socket.onclose = e => {
+			this.socket.onclose = (e) => {
 				this.emit('close', e);
 				this.socket = null;
 				setTimeout(reject, 0);
@@ -96,7 +94,7 @@ class Client extends EventEmitter {
 	 */
 	disconnect() {
 		if (this.socket) {
-			let disconnected = new Promise((resolve, reject) => {
+			const disconnected = new Promise((resolve, reject) => {
 				this.once('close', resolve);
 				setTimeout(reject, 60000, 'Disconnection timed out.');
 			});
@@ -114,20 +112,19 @@ class Client extends EventEmitter {
 	 * Check if it's connected to a server
 	 * @param {boolean}
 	 */
-	get connected(){
-		return this.socket && this.socket.readyState == WebSocket.OPEN;
+	get connected() {
+		return this.socket && this.socket.readyState === WebSocket.OPEN;
 	}
 
 	/**
 	 * Connection state
 	 * @return {number}
 	 */
-	get state(){
+	get state() {
 		if (this.socket) {
 			return this.socket.readyState;
-		} else {
-			return WebSocket.CONNECTING;
 		}
+		return WebSocket.CONNECTING;
 	}
 
 	/**
@@ -136,7 +133,7 @@ class Client extends EventEmitter {
 	 * @param {object} args
 	 */
 	send(command, args = null) {
-		let packet = new Packet;
+		const packet = new Packet();
 		packet.command = command;
 		packet.arguments = args;
 		packet.timeout = 0;
@@ -150,7 +147,7 @@ class Client extends EventEmitter {
 	 */
 	request(command, args = null) {
 		return new Promise((resolve, reject) => {
-			this.bind(command, resolve, {once: true});
+			this.bind(command, resolve, { once: true });
 			this.send(command, args);
 			setTimeout(reject, this.timeout, 'Command timed out.');
 		});
@@ -169,17 +166,15 @@ class Client extends EventEmitter {
 
 		this.currentCommand = command;
 
-		for (let handler of handlers) {
-			handler.call(this, args);
-		}
-
-		let removed = [];
-		for (let handler of handlers) {
-			if (handler.once) {
+		const removed = [];
+		for (const handler of handlers) {
+			handler.callback.call(this, args);
+			if (handler.options && handler.options.once) {
 				removed.push(handler);
 			}
 		}
-		for (let handler of removed) {
+
+		for (const handler of removed) {
 			handlers.delete(handler);
 		}
 	}
@@ -193,14 +188,14 @@ class Client extends EventEmitter {
 	bind(command, callback, options = null) {
 		let handlers = this.onmessage.get(command);
 		if (!handlers) {
-			handlers = new Set;
+			handlers = [];
 			this.onmessage.set(command, handlers);
 		}
 
-		if (options && options.once) {
-			callback.once = true;
-		}
-		handlers.add(callback);
+		handlers.add({
+			callback,
+			options,
+		});
 	}
 
 	/**
@@ -212,9 +207,15 @@ class Client extends EventEmitter {
 		if (!callback) {
 			this.onmessage.delete(command);
 		} else {
-			let handlers = this.onmessage.get(command);
+			const handlers = this.onmessage.get(command);
 			if (handlers) {
-				handlers.delete(callback);
+				for (let i = 0; i < handlers.length; i++) {
+					const handler = handlers[i];
+					if (handler.callback === callback) {
+						handlers.splice(i, 1);
+						break;
+					}
+				}
 			}
 		}
 	}
@@ -245,8 +246,8 @@ class Client extends EventEmitter {
 		}
 
 		this.send(locker.command, args);
+		return true;
 	}
-
 }
 
 export default Client;
