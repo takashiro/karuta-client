@@ -1,81 +1,80 @@
-import assert from 'assert';
-import sinon from 'sinon';
+import Client from '../lib/Client';
 
-import Client from '../Client';
-
-describe('Client', function () {
-	describe('#setUrl()', function () {
+describe('Client', () => {
+	describe('#setUrl()', () => {
 		const client = new Client();
 
-		it('accepts absolute path', function () {
+		it('accepts absolute path', () => {
 			const exampleUrl = 'http://www.example.com';
 			client.setUrl(exampleUrl);
-			assert.strictEqual(client.url, exampleUrl);
+			expect(client.getUrl()).toBe(exampleUrl);
 		});
 
-		it('resets URL', function () {
+		it('resets URL', () => {
 			client.setUrl(null);
-			assert.strictEqual(client.url, '');
+			expect(client.getUrl()).toBe('');
 		});
 
-		it('accepts hostname only', function () {
+		it('accepts hostname only', () => {
 			client.setUrl('example');
-			assert.strictEqual(client.url, 'ws://example:2610/');
+			expect(client.getUrl()).toBe('ws://example:2610/');
 		});
 
-		it('accepts hostname with context path', function () {
+		it('accepts hostname with context path', () => {
 			client.setUrl('example.com/test');
-			assert.strictEqual(client.url, 'ws://example.com:2610/test');
+			expect(client.getUrl()).toBe('ws://example.com:2610/test');
 		});
 
-		it('accepts hostname with port number', function () {
+		it('accepts hostname with port number', () => {
 			client.setUrl('localhost:2620');
-			assert.strictEqual(client.url, 'ws://localhost:2620/');
+			expect(client.getUrl()).toBe('ws://localhost:2620/');
 		});
 	});
 
-	describe('#connect()', function () {
-		it('refuses void parameter', async function () {
+	describe('#connect()', () => {
+		it('refuses void parameter', async () => {
 			const client = new Client();
+
+			expect.assertions(1);
 			try {
 				await client.connect();
-				assert.fail('No error is thrown');
 			} catch (error) {
-				assert.strictEqual(error.message, 'No url is defined.');
+				expect(error.message).toBe('No url is defined.');
 			}
 		});
 
-		it('fails if WebSocket cannot be created', async function () {
+		it('fails if WebSocket cannot be created', async () => {
 			const client = new Client();
-			const hasError = new Promise(function (resolve) {
+			const hasError = new Promise(((resolve) => {
 				client.once('error', resolve);
-			});
+			}));
+
+			expect.assertions(2);
 			try {
 				await client.connect('localhost');
-				assert.fail('No error is thrown');
 			} catch (error) {
-				assert.strictEqual(error.message, 'WebSocket is not defined');
+				expect(error.message).toBe('WebSocket is not defined');
 			}
 			const errorMessage = await hasError;
-			assert.strictEqual(errorMessage, 'WebSocket is not defined');
+			expect(errorMessage).toBe('WebSocket is not defined');
 		});
 
-		it('fails when WebSocket is closed', async function () {
+		it('fails when WebSocket is closed', async () => {
 			global.WebSocket = function () {};
 			WebSocket.prototype.onclose = null;
 
 			const client = new Client();
-			const onClose = new Promise(function (resolve) {
+			const onClose = new Promise((resolve) => {
 				client.once('close', resolve);
 			});
-			setTimeout(function () {
+			setTimeout(() => {
 				client.socket.onclose();
 			}, 0);
+			expect.assertions(1);
 			try {
 				await client.connect('localhost');
-				assert.fail('No error is thrown even websocket is closed.');
 			} catch (error) {
-				assert.strictEqual(error.message, 'WebSocket is closed.');
+				expect(error.message).toBe('WebSocket is closed.');
 			}
 			await onClose;
 
@@ -84,14 +83,14 @@ describe('Client', function () {
 
 		const client = new Client();
 
-		it('succeeds when WebSocket is opened', async function () {
+		it('succeeds when WebSocket is opened', async () => {
 			global.WebSocket = function () {};
 			WebSocket.prototype.onopen = null;
 
-			const onOpen = new Promise(function (resolve) {
+			const onOpen = new Promise((resolve) => {
 				client.once('open', resolve);
 			});
-			setTimeout(function () {
+			setTimeout(() => {
 				client.socket.onopen();
 			}, 0);
 			await Promise.all([
@@ -102,125 +101,128 @@ describe('Client', function () {
 			delete global.WebSocket;
 		});
 
-		it('binds WebSocket onmessage', function () {
-			client.trigger = sinon.spy();
+		it('binds WebSocket onmessage', () => {
+			client.trigger = jest.fn();
 			client.socket.onmessage({ data: '[1]' });
-			assert(client.trigger.calledOnceWith(1));
+			expect(client.trigger).toBeCalledWith(1, undefined);
 		});
 	});
 
-	describe('#disconnect()', function () {
+	describe('#disconnect()', () => {
 		const client = new Client();
 
-		it('does nothing if no socket exists', async function () {
+		it('does nothing if no socket exists', async () => {
 			await client.disconnect();
 		});
 
-		it('closes and removes web socket', async function () {
+		it('closes and removes web socket', async () => {
 			const socket = {
-				close: sinon.spy(),
+				close: jest.fn(),
 			};
 			client.socket = socket;
-			setTimeout(function () {
+			setTimeout(() => {
 				client.emit('close');
 			}, 0);
 			await client.disconnect();
-			assert(socket.close.calledOnceWith());
-			assert.strictEqual(client.connected, false);
-			assert.strictEqual(client.socket, null);
+			expect(socket.close).toBeCalledTimes(1);
+			expect(client.connected).toBe(false);
+			expect(client.socket).toBeNull();
 		});
 	});
 
-	describe('#connected', function () {
+	describe('#connected', () => {
 		const client = new Client();
-		it('is disconnected', function () {
-			assert.strictEqual(client.connected, false);
+		it('is disconnected', () => {
+			expect(client.connected).toBe(false);
 		});
-		it('is connected', function () {
+		it('is connected', () => {
 			global.WebSocket = {
 				OPEN: String(Math.random()),
 			};
 			client.socket = {
 				readyState: WebSocket.OPEN,
 			};
-			assert.strictEqual(client.connected, true);
+			expect(client.connected).toBe(true);
 			delete global.WebSocket;
 		});
 	});
 
-	describe('#state', function () {
+	describe('#state', () => {
 		const client = new Client();
-		it('is connecting', function () {
+		it('is connecting', () => {
 			global.WebSocket = {
 				CONNECTING: String(Math.random()),
 			};
-			assert.strictEqual(client.state, WebSocket.CONNECTING);
+			expect(client.state).toBe(WebSocket.CONNECTING);
 			delete global.WebSocket;
 		});
-		it('returns web socket state', function () {
+		it('returns web socket state', () => {
 			client.socket = {
 				readyState: String(Math.random()),
 			};
-			assert.strictEqual(client.state, client.socket.readyState);
+			expect(client.state).toBe(client.socket.readyState);
 		});
 	});
 
-	describe('#send()', function () {
+	describe('#send()', () => {
 		const client = new Client();
 		const socket = {
-			send: sinon.spy(),
+			send: jest.fn(),
 		};
 		client.socket = socket;
 
-		it('sends JSON', function () {
+		it('sends JSON', () => {
 			client.send(1234, [1, 2, 3, 4]);
-			assert(socket.send.calledOnceWith('[1234,[1,2,3,4]]'));
-			socket.send.resetHistory();
+			expect(socket.send).toBeCalledTimes(1);
+			expect(socket.send).toBeCalledWith('[1234,[1,2,3,4]]');
+			socket.send.mockClear();
 		});
 
-		it('accepts 1 argument', function () {
+		it('accepts 1 argument', () => {
 			client.send(678);
-			assert(socket.send.calledOnceWith('[678]'));
-			socket.send.resetHistory();
+			expect(socket.send).toBeCalledTimes(1);
+			expect(socket.send).toBeCalledWith('[678]');
+			socket.send.mockClear();
 		});
 	});
 
-	describe('#request()', function () {
+	describe('#request()', () => {
 		const client = new Client();
 		const socket = {
-			send: sinon.spy(),
+			send: jest.fn(),
 		};
 		client.socket = socket;
 
-		it('sends a command and waits for a reply', async function () {
+		it('sends a command and waits for a reply', async () => {
 			const key = String(Math.random());
-			setTimeout(function () {
+			setTimeout(() => {
 				client.trigger(4321, key);
 			}, 0);
 			const reply = await client.request(4321);
-			assert(socket.send.calledOnceWith('[4321]'));
-			assert(reply === key);
+			expect(socket.send).toBeCalledTimes(1);
+			expect(socket.send).toBeCalledWith('[4321]');
+			expect(reply).toBe(key);
 		});
 	});
 
-	describe('#trigger()', function () {
+	describe('#trigger()', () => {
 		const client = new Client();
 
-		it('does nothing when no handler is bound', function () {
+		it('does nothing when no handler is bound', () => {
 			client.trigger(1234);
 		});
 
-		it('triggers events', function () {
-			const callback1 = sinon.spy();
+		it('triggers events', () => {
+			const callback1 = jest.fn();
 			client.bind(1, callback1);
 
-			const callback2 = sinon.spy();
+			const callback2 = jest.fn();
 			client.bind(1, callback2, { once: true });
 
-			const callback3 = sinon.spy();
+			const callback3 = jest.fn();
 			client.bind(2, callback3);
 
-			const callback4 = sinon.spy();
+			const callback4 = jest.fn();
 			client.bind(1, callback4);
 
 			const key1 = String(Math.random());
@@ -229,88 +231,95 @@ describe('Client', function () {
 			const key2 = String(Math.random());
 			client.trigger(1, key2);
 
-			assert.strictEqual(callback1.callCount, 2);
-			assert(callback1.firstCall.calledWithExactly(key1));
-			assert(callback1.secondCall.calledWithExactly(key2));
-			assert(callback2.calledOnceWithExactly(key1));
-			assert.strictEqual(callback3.callCount, 0);
-			assert.strictEqual(callback4.callCount, 2);
-			assert(callback4.firstCall.calledWithExactly(key1));
-			assert(callback4.secondCall.calledWithExactly(key2));
+			expect(callback1).toBeCalledTimes(2);
+			expect(callback1).nthCalledWith(1, key1);
+			expect(callback1).nthCalledWith(2, key2);
+			expect(callback2).toBeCalledTimes(1);
+			expect(callback2).toBeCalledWith(key1);
+			expect(callback3).toBeCalledTimes(0);
+			expect(callback4).toBeCalledTimes(2);
+			expect(callback4).nthCalledWith(1, key1);
+			expect(callback4).nthCalledWith(2, key2);
 		});
 	});
 
-	describe('#unbind()', function () {
+	describe('#unbind()', () => {
 		const client = new Client();
 
-		it('does nothing if the command does not exist', function () {
+		it('does nothing if the command does not exist', () => {
 			client.unbind(6789, 1);
 			client.unbind(1234);
 		});
 
-		it('unbinds all listeners', function () {
-			const callback = sinon.spy();
+		it('unbinds all listeners', () => {
+			const callback = jest.fn();
 			client.bind(1, 1);
 			client.bind(1, 2);
 			client.bind(1, callback);
 			client.unbind(1);
 			client.trigger(1);
-			assert.strictEqual(callback.callCount, 0);
+			expect(callback).not.toBeCalled();
 		});
 
-		it('unbinds one listener', function () {
-			const callback1 = sinon.spy();
+		it('unbinds one listener', () => {
+			const callback1 = jest.fn();
 			client.bind(4, callback1);
 			const callback2 = 333;
 			client.bind(4, callback2);
-			const callback3 = sinon.spy();
+			const callback3 = jest.fn();
 			client.bind(4, callback3);
-			const callback4 = sinon.spy();
+			const callback4 = jest.fn();
 			client.bind(4, callback4);
 
 			client.unbind(4, callback2);
 			client.unbind(4, callback3);
 
 			client.trigger(4, 'test');
-			assert(callback1.calledOnceWith('test'));
-			assert.strictEqual(callback3.callCount, 0);
-			assert(callback4.calledOnceWith('test'));
+			expect(callback1).toBeCalledTimes(1);
+			expect(callback1).toBeCalledWith('test');
+			expect(callback3).not.toBeCalled();
+			expect(callback4).toBeCalledTimes(1);
+			expect(callback4).toBeCalledWith('test');
 		});
 	});
 
-	describe('#reply()', function () {
+	describe('#reply()', () => {
 		const client = new Client();
 		const socket = {
-			send: sinon.spy(),
+			send: jest.fn(),
 		};
 		client.socket = socket;
 
-		client.bind(456, sinon.fake());
-		client.bind(457, sinon.fake());
+		client.bind(456, jest.fn());
+		client.bind(457, jest.fn());
 
-		it('replies to the current command', function () {
+		afterEach(() => {
+			socket.send.mockClear();
+		});
+
+		it('replies to the current command', () => {
 			client.trigger(456);
 			const locker = client.lock();
 			const res = client.reply(locker, 789);
-			assert.strictEqual(res, true);
-			assert(socket.send.calledOnceWith('[456,789]'));
-			socket.send.resetHistory();
+			expect(res).toBe(true);
+			expect(socket.send).toBeCalledTimes(1);
+			expect(socket.send).toBeCalledWith('[456,789]');
 		});
 
-		it('will not reply if a new command comes', function () {
+		it('will not reply if a new command comes', () => {
 			const locker = client.lock();
 			client.trigger(457);
-			assert.strictEqual(client.reply(locker), false);
-			assert.strictEqual(socket.send.callCount, 0);
+			expect(client.reply(locker)).toBe(false);
+			expect(socket.send).not.toBeCalled();
 		});
 
-		it('will not reply if a new locker exists', function () {
+		it('will not reply if a new locker exists', () => {
 			const locker1 = client.lock();
 			const locker2 = client.lock();
-			assert.strictEqual(client.reply(locker1), false);
-			assert.strictEqual(client.reply(locker2), true);
-			assert(socket.send.calledOnceWithExactly('[457]'));
-			socket.send.resetHistory();
+			expect(client.reply(locker1)).toBe(false);
+			expect(client.reply(locker2)).toBe(true);
+			expect(socket.send).toBeCalledTimes(1);
+			expect(socket.send).toBeCalledWith('[457]');
 		});
 	});
 });

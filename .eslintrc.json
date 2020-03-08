@@ -20,11 +20,27 @@
 		],
 		"no-tabs": "off",
 		"no-plusplus": "off",
-		"linebreak-style": "off",
+        "linebreak-style": "off",
+        "import/extensions": [
+			"error",
+			"ignorePackages",
+			{
+				"ts": "never",
+				"js": "never"
+			}
+		],
 		"no-restricted-syntax": [
 			"error",
 			"WithStatement"
-		],
-		"prefer-arrow-callback": "off"
+		]
+    },
+	"settings": {
+		"import/resolver": {
+			"node": {
+				"extensions": [
+                    ".ts"
+                ]
+			}
+		}
     }
 }

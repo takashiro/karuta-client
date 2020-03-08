@@ -1,9 +1,9 @@
+/.github/
+/.vscode/
 /build/
 /test/
-/.github/
 /.eslintrc.json
-/.travis.yml
 /.gitignore
+/.travis.yml
 /.npmignore
-/.babelrc
-/.mocharc.yaml
+/jest.config.js

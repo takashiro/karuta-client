@@ -1,12 +1,11 @@
 {
   "name": "@karuta/client",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "Client common classes of Karuta Server",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint .",
-    "test": "eslint . && mocha test",
-    "test-coverage": "nyc --reporter=lcov --report-dir=build/coverage --temp-dir=build/.nyc_output mocha test"
+    "lint": "eslint --ext js,ts .",
+    "test": "npm run lint && jest"
   },
   "repository": {
     "type": "git",
@@ -23,16 +22,16 @@
   },
   "homepage": "https://github.com/takashiro/karuta-node-client#readme",
   "devDependencies": {
-    "@babel/core": "^7.6.4",
-    "@babel/plugin-transform-modules-commonjs": "^7.6.0",
-    "@babel/register": "^7.6.2",
-    "c8": "^5.0.4",
-    "eslint": "^6.5.1",
+    "@types/jest": "^25.1.4",
+    "@types/node": "^13.9.0",
+    "@typescript-eslint/eslint-plugin": "^2.22.0",
+    "@typescript-eslint/parser": "^2.22.0",
+    "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
-    "eslint-plugin-import": "^2.18.2",
-    "mocha": "^6.2.1",
-    "nyc": "^14.1.1",
-    "sinon": "^7.5.0"
+    "eslint-plugin-import": "^2.20.1",
+    "jest": "^25.1.0",
+    "ts-jest": "^25.2.1",
+    "typescript": "^3.8.3"
   },
   "dependencies": {}
 }

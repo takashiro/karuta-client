@@ -1,40 +1,35 @@
-import assert from 'assert';
+import Packet from '../lib/Packet';
 
-import Packet from '../Packet';
-
-describe('Packet', function () {
-	it('creates an invalid packet', function () {
+describe('Packet', () => {
+	it('creates an invalid packet', () => {
 		const packet = new Packet();
-		assert(packet.command === 0);
-		assert(packet.arguments === null);
-
-		const json = packet.toJSON();
-		assert(json === '[0]');
+		expect(packet.command).toBe(0);
+		expect(packet.arguments).toBeUndefined();
+		expect(packet.toJSON()).toBe('[0]');
 	});
 
-	it('accepts invalid JSON', function () {
+	it('accepts invalid JSON', () => {
 		const packet = new Packet('{');
-		assert.strictEqual(packet.command, 0);
-		assert.strictEqual(packet.arguments, null);
-		assert(packet.error);
+		expect(packet.command).toBe(0);
+		expect(packet.arguments).toBeUndefined();
+		expect(packet.error).toBeInstanceOf(Error);
 	});
 
-	it('accepts non-array input', function () {
+	it('accepts non-array input', () => {
 		const packet = new Packet('{}');
-		assert.strictEqual(packet.command, 0);
-		assert.strictEqual(packet.arguments, null);
+		expect(packet.command).toBe(0);
+		expect(packet.arguments).toBeUndefined();
 	});
 
-	it('creates a packet', function () {
+	it('creates a packet', () => {
 		const packet = new Packet('[1]');
-		assert.strictEqual(packet.command, 1);
-		const json = packet.toJSON();
-		assert.strictEqual(json, '[1]');
+		expect(packet.command).toBe(1);
+		expect(packet.toJSON()).toBe('[1]');
 	});
 
-	it('creates a packet with arguments', function () {
+	it('creates a packet with arguments', () => {
 		const raw = '[2,34]';
 		const packet = new Packet(raw);
-		assert(packet.toJSON(), raw);
+		expect(packet.toJSON()).toBe(raw);
 	});
 });

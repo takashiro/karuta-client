@@ -1,29 +1,63 @@
 
-import EventEmitter from 'events';
+import { EventEmitter } from 'events';
 import Packet from './Packet';
 
+interface Locker {
+	command: number;
+	serial: number;
+}
+
+interface CallbackOptions {
+	once: boolean;
+}
+
+type Callback = (args?: any) => void;
+
+interface MessageListener {
+	callback: Callback;
+	options?: CallbackOptions;
+}
+
 class Client extends EventEmitter {
+	protected url: string;
+
+	protected socket: WebSocket | null;
+
+	protected onmessage: Map<number, MessageListener[]>;
+
+	protected timeout: number;
+
+	protected currentCommand: number;
+
+	protected commandSerial: number;
+
 	/**
 	 * Create a client instance
-	 * @param {string} url Server URL
 	 */
-	constructor(url) {
+	constructor() {
 		super();
 
-		this.setUrl(url);
+		this.url = '';
 		this.socket = null;
 
 		this.onmessage = new Map();
 		this.timeout = 10000;
-		this.currentCommand = null;
+		this.currentCommand = 0;
 		this.commandSerial = 0;
 	}
 
 	/**
-	 * Setter of server URL
-	 * @param {string} url Server URL
+	 * Gets URL of the server.
 	 */
-	setUrl(url) {
+	getUrl(): string {
+		return this.url;
+	}
+
+	/**
+	 * Setter of server URL
+	 * @param url Server URL
+	 */
+	setUrl(url?: string): void {
 		if (url) {
 			const absolutePath = /^\w+:\/\/.+/i;
 			if (absolutePath.test(url)) {
@@ -51,10 +85,9 @@ class Client extends EventEmitter {
 
 	/**
 	 * Connect to a server
-	 * @param {string} url server URL
-	 * @return {Promise}
+	 * @param url server URL
 	 */
-	connect(url = null) {
+	connect(url?: string): Promise<void> {
 		if (url) {
 			this.setUrl(url);
 		}
@@ -70,17 +103,22 @@ class Client extends EventEmitter {
 			return Promise.reject(error);
 		}
 
-		this.socket.onmessage = (e) => {
+		this.socket.onmessage = (e): void => {
 			const packet = new Packet(e.data);
 			this.trigger(packet.command, packet.arguments);
 		};
 
 		return new Promise((resolve, reject) => {
-			this.socket.onopen = () => {
+			if (!this.socket) {
+				reject(new Error('WebSocket is closed.'));
+				return;
+			}
+
+			this.socket.onopen = (): void => {
 				this.emit('open');
 				setTimeout(resolve, 0);
 			};
-			this.socket.onclose = (e) => {
+			this.socket.onclose = (e): void => {
 				this.emit('close', e);
 				this.socket = null;
 				setTimeout(reject, 0, new Error('WebSocket is closed.'));
@@ -90,13 +128,12 @@ class Client extends EventEmitter {
 
 	/**
 	 * Disconnect from the server
-	 * @return {Promise}
 	 */
-	disconnect() {
+	disconnect(): Promise<void> {
 		if (this.socket) {
-			const disconnected = new Promise((resolve, reject) => {
+			const disconnected = new Promise<void>((resolve, reject) => {
 				const timer = setTimeout(reject, 60000, 'Disconnection timed out.');
-				this.once('close', function () {
+				this.once('close', () => {
 					clearTimeout(timer);
 					resolve();
 				});
@@ -113,17 +150,15 @@ class Client extends EventEmitter {
 
 	/**
 	 * Check if it's connected to a server
-	 * @param {boolean}
 	 */
-	get connected() {
-		return Boolean(this.socket) && this.socket.readyState === WebSocket.OPEN;
+	get connected(): boolean {
+		return Boolean(this.socket && this.socket.readyState === WebSocket.OPEN);
 	}
 
 	/**
 	 * Connection state
-	 * @return {number}
 	 */
-	get state() {
+	get state(): number {
 		if (this.socket) {
 			return this.socket.readyState;
 		}
@@ -132,10 +167,14 @@ class Client extends EventEmitter {
 
 	/**
 	 * Send a command to server
-	 * @param {number} command
-	 * @param {object} args
+	 * @param command
+	 * @param args
 	 */
-	send(command, args = null) {
+	send(command: number, args?: any): void {
+		if (!this.socket) {
+			return;
+		}
+
 		const packet = new Packet();
 		packet.command = command;
 		packet.arguments = args;
@@ -145,15 +184,15 @@ class Client extends EventEmitter {
 
 	/**
 	 * Send a command to server and wait for its reply
-	 * @param {number} command
-	 * @param {object} args
+	 * @param command
+	 * @param args
 	 */
-	request(command, args = null) {
+	request(command: number, args?: any): Promise<object> {
 		return new Promise((resolve, reject) => {
 			const timer = setTimeout(reject, this.timeout, 'Command timed out.');
-			this.bind(command, (...res) => {
+			this.bind(command, (res?: any): void => {
 				clearTimeout(timer);
-				resolve.call(this, ...res);
+				resolve(res);
 			}, { once: true });
 			this.send(command, args);
 		});
@@ -161,10 +200,10 @@ class Client extends EventEmitter {
 
 	/**
 	 * Trigger a message handler
-	 * @param {number} command
-	 * @param {object} args
+	 * @param command
+	 * @param args
 	 */
-	trigger(command, args = null) {
+	trigger(command: number, args?: any): void {
 		const handlers = this.onmessage.get(command);
 		if (!handlers) {
 			return;
@@ -186,11 +225,11 @@ class Client extends EventEmitter {
 
 	/**
 	 * Bind a message handler
-	 * @param {number} command
-	 * @param {Function} callback
-	 * @param {object} options
+	 * @param command
+	 * @param callback
+	 * @param options
 	 */
-	bind(command, callback, options = null) {
+	bind(command: number, callback: Callback, options?: CallbackOptions): void {
 		let handlers = this.onmessage.get(command);
 		if (!handlers) {
 			handlers = [];
@@ -205,21 +244,23 @@ class Client extends EventEmitter {
 
 	/**
 	 * Unbind a message handler
-	 * @param {number} command
-	 * @param {Function} callback
+	 * @param command
+	 * @param callback
 	 */
-	unbind(command, callback = null) {
+	unbind(command: number, callback?: Callback): void {
 		if (!callback) {
 			this.onmessage.delete(command);
 		} else {
 			const handlers = this.onmessage.get(command);
-			if (handlers) {
-				for (let i = 0; i < handlers.length; i++) {
-					const handler = handlers[i];
-					if (handler.callback === callback) {
-						handlers.splice(i, 1);
-						break;
-					}
+			if (!handlers) {
+				return;
+			}
+
+			for (let i = 0; i < handlers.length; i++) {
+				const handler = handlers[i];
+				if (handler.callback === callback) {
+					handlers.splice(i, 1);
+					break;
 				}
 			}
 		}
@@ -229,7 +270,7 @@ class Client extends EventEmitter {
 	 * Create a locker for the current server command.
 	 * @return {object}
 	 */
-	lock() {
+	lock(): Locker {
 		const command = this.currentCommand;
 		const serial = ++this.commandSerial;
 		this.emit('lockChanged');
@@ -241,11 +282,11 @@ class Client extends EventEmitter {
 
 	/**
 	 * Sends a command to server if it's still wanted.
-	 * @param {object} locker
-	 * @param {*} args
+	 * @param locker
+	 * @param args
 	 * @return {boolean}
 	 */
-	reply(locker, args) {
+	reply(locker: Locker, args: any): boolean {
 		if (locker.command !== this.currentCommand || locker.serial !== this.commandSerial) {
 			return false;
 		}
