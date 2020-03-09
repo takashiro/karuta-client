@@ -187,7 +187,7 @@ class Client extends EventEmitter {
 	 * @param command
 	 * @param args
 	 */
-	request(command: number, args?: any): Promise<object> {
+	request(command: number, args?: any): Promise<any> {
 		return new Promise((resolve, reject) => {
 			const timer = setTimeout(reject, this.timeout, 'Command timed out.');
 			this.bind(command, (res?: any): void => {
@@ -268,7 +268,6 @@ class Client extends EventEmitter {
 
 	/**
 	 * Create a locker for the current server command.
-	 * @return {object}
 	 */
 	lock(): Locker {
 		const command = this.currentCommand;

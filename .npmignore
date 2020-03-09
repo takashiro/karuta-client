@@ -1,9 +1,11 @@
 /.github/
 /.vscode/
 /build/
+/lib/
 /test/
 /.eslintrc.json
 /.gitignore
 /.travis.yml
 /.npmignore
 /jest.config.js
+/webpack.config.js

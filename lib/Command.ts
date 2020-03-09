@@ -1,5 +1,5 @@
 
-enum Command {
+const enum Command {
 	Invalid = 0,
 
 	CheckVersion = -1,

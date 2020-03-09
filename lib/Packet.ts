@@ -2,7 +2,7 @@
 export default class Packet {
 	command: number;
 
-	arguments?: object;
+	arguments?: any;
 
 	timeout?: number;
 
