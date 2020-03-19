@@ -1,4 +1,4 @@
-import Client from '../lib/Client';
+import Client from '../src/Client';
 
 describe('Client', () => {
 	describe('#setUrl()', () => {

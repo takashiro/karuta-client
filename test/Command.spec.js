@@ -1,4 +1,4 @@
-import Command from '../lib/Command';
+import Command from '../src/Command';
 
 describe('Command', () => {
 	it('has numeric properties only', () => {

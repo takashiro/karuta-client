@@ -1,4 +1,4 @@
-import Packet from '../lib/Packet';
+import Packet from '../src/Packet';
 
 describe('Packet', () => {
 	it('creates an invalid packet', () => {

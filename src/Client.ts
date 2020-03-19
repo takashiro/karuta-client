@@ -20,15 +20,13 @@ interface MessageListener {
 
 declare interface Client {
 	on(event: 'error', listener: (message: string) => void): this;
-	once(event: 'error', listener: (message: string) => void): this;
-
-	on(event: 'open' , listener: () => void): this;
-	once(event: 'open', listener: () => void): this;
-
+	on(event: 'open', listener: () => void): this;
 	on(event: 'close', listener: () => void): this;
-	once(event: 'close', listener: (event: CloseEvent) => void): this;
-
 	on(event: 'lockChanged', listener: () => void): this;
+
+	once(event: 'error', listener: (message: string) => void): this;
+	once(event: 'open', listener: () => void): this;
+	once(event: 'close', listener: (event: CloseEvent) => void): this;
 	once(event: 'lockChanged', listener: () => void): this;
 }
 

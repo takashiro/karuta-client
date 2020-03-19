@@ -6,7 +6,7 @@ module.exports = function (env, argv) {
 		mode,
 		target: 'node',
 		entry: {
-			index: './lib/index.ts',
+			index: './src/index.ts',
 		},
 		module: {
 			rules: [
