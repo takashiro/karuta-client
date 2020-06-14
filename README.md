@@ -1,4 +1,4 @@
-Karuta Client [![Build Status](https://www.travis-ci.org/takashiro/karutanode-client.svg?branch=dev)](https://www.travis-ci.org/takashiro/karuta-node-client)
+Karuta Client ![Node.js CI](https://github.com/takashiro/karuta-node-client/workflows/Node.js%20CI/badge.svg)
 ==========
 
 Introduction
