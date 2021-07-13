@@ -1,6 +1,8 @@
 import Client from '../src/Client';
 
 describe('Client', () => {
+	class WebSocket {}
+
 	describe('#setUrl()', () => {
 		const client = new Client();
 
@@ -60,7 +62,7 @@ describe('Client', () => {
 		});
 
 		it('fails when WebSocket is closed', async () => {
-			global.WebSocket = function () {};
+			global.WebSocket = WebSocket;
 			WebSocket.prototype.onclose = null;
 
 			const client = new Client();
@@ -84,7 +86,7 @@ describe('Client', () => {
 		const client = new Client();
 
 		it('succeeds when WebSocket is opened', async () => {
-			global.WebSocket = function () {};
+			global.WebSocket = WebSocket;
 			WebSocket.prototype.onopen = null;
 
 			const onOpen = new Promise((resolve) => {

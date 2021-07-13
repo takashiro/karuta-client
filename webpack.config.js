@@ -1,6 +1,7 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path');
 
-module.exports = function (env, argv) {
+module.exports = function config(env, argv) {
 	const mode = (argv && argv.mode) || 'production';
 	return {
 		mode,

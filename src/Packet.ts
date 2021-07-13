@@ -1,8 +1,7 @@
-
 export default class Packet {
 	command: number;
 
-	arguments?: any;
+	arguments?: unknown;
 
 	timeout?: number;
 
@@ -30,7 +29,7 @@ export default class Packet {
 	 * Convert a network packet into JSON string representation
 	 */
 	toJSON(): string {
-		const json: (number | object)[] = [this.command];
+		const json: unknown[] = [this.command];
 		if (this.arguments !== undefined && this.arguments !== null) {
 			json.push(this.arguments);
 		}

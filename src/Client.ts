@@ -1,4 +1,3 @@
-
 import { EventEmitter } from 'events';
 import Packet from './Packet';
 
@@ -11,7 +10,7 @@ interface CallbackOptions {
 	once: boolean;
 }
 
-type Callback = (args?: any) => void;
+type Callback = (args?: unknown) => void;
 
 interface MessageListener {
 	callback: Callback;
@@ -182,7 +181,7 @@ class Client extends EventEmitter {
 	 * @param command
 	 * @param args
 	 */
-	send(command: number, args?: any): void {
+	send(command: number, args?: unknown): void {
 		if (!this.socket) {
 			return;
 		}
@@ -199,10 +198,10 @@ class Client extends EventEmitter {
 	 * @param command
 	 * @param args
 	 */
-	request(command: number, args?: any): Promise<any> {
+	request(command: number, args?: unknown): Promise<any> {
 		return new Promise((resolve, reject) => {
 			const timer = setTimeout(reject, this.timeout, 'Command timed out.');
-			this.bind(command, (res?: any): void => {
+			this.bind(command, (res?: unknown): void => {
 				clearTimeout(timer);
 				resolve(res);
 			}, { once: true });

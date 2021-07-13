@@ -1,4 +1,3 @@
-
 const enum Command {
 	Invalid = 0,
 
