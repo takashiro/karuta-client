@@ -20,6 +20,7 @@ module.exports = function config(env, argv) {
 		resolve: {
 			extensions: [
 				'.ts',
+				'.js',
 			],
 		},
 		output: {
