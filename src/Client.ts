@@ -1,7 +1,4 @@
-import {
-	Connection,
-	Context,
-} from '@karuta/core';
+import { Connection } from '@karuta/core';
 
 class Client {
 	protected url = '';
@@ -77,6 +74,13 @@ class Client {
 	}
 
 	/**
+	 * @return Connectionto server
+	 */
+	getSocket(): Connection | undefined {
+		return this.socket;
+	}
+
+	/**
 	 * Check if it's connected to a server
 	 */
 	isConnected(): boolean {
@@ -91,28 +95,6 @@ class Client {
 			return this.socket.getReadyState();
 		}
 		return WebSocket.CONNECTING;
-	}
-
-	async postRoom(): Promise<number> {
-		if (!this.socket) {
-			throw new Error('Disconnected from server');
-		}
-
-		const id = await this.socket.post(Context.Room);
-		if (typeof id !== 'number') {
-			throw new Error(`Unexpected response: ${id}`);
-		}
-
-		return id;
-	}
-
-	async getRoom(id: number): Promise<boolean> {
-		if (!this.socket) {
-			throw new Error('Disconnected from server');
-		}
-
-		const res = await this.socket.get(Context.Room);
-		return res === id;
 	}
 }
 
