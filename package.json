@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/takashiro/karuta-node-client.git"
+    "url": "git+https://github.com/takashiro/karuta-client.git"
   },
   "keywords": [
     "Karuta",
@@ -20,12 +20,11 @@
   "author": "Kazuichi Takashiro",
   "license": "AGPL-3.0",
   "bugs": {
-    "url": "https://github.com/takashiro/karuta-node-client/issues"
+    "url": "https://github.com/takashiro/karuta-client/issues"
   },
-  "homepage": "https://github.com/takashiro/karuta-node-client#readme",
+  "homepage": "https://github.com/takashiro/karuta-client#readme",
   "dependencies": {
-    "@karuta/core": "^0.4.0",
-    "@karuta/protocol": "^0.2.1"
+    "@karuta/core": "^0.4.1"
   },
   "devDependencies": {
     "@types/jest": "^26.0.24",

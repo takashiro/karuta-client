@@ -1,4 +1,7 @@
-import { Connection, Context } from '@karuta/protocol';
+import {
+	Connection,
+	Context,
+} from '@karuta/core';
 
 export default class Room<Config> {
 	protected socket: Connection;

@@ -1,7 +1,7 @@
 import {
 	Connection,
 	Context,
-} from '@karuta/protocol';
+} from '@karuta/core';
 
 class Client {
 	protected url = '';
