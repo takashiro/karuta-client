@@ -1,13 +1,14 @@
 import {
-	Connection,
 	Context,
 	RoomConfiguration,
 	RoomProfile,
 	UserProfile,
 } from '@karuta/core';
 
+import Client from './Client';
+
 export default class Room {
-	protected socket: Connection;
+	protected client: Client;
 
 	protected id = 0;
 
@@ -15,8 +16,8 @@ export default class Room {
 
 	protected config?: RoomConfiguration;
 
-	constructor(socket: Connection) {
-		this.socket = socket;
+	constructor(client: Client) {
+		this.client = client;
 	}
 
 	getId(): number {
@@ -27,12 +28,12 @@ export default class Room {
 		return this.owner;
 	}
 
-	async create(): Promise<void> {
-		if (!this.socket) {
-			throw new Error('Disconnected from server');
-		}
+	isValid(): boolean {
+		return this.id > 0;
+	}
 
-		const id = await this.socket.put(Context.Room);
+	async create(): Promise<void> {
+		const id = await this.client.put(Context.Room);
 		if (typeof id !== 'number') {
 			throw new Error(`Unexpected response: ${id}`);
 		}
@@ -41,7 +42,7 @@ export default class Room {
 	}
 
 	async enter(id: number): Promise<boolean> {
-		const res = await this.socket.post(Context.Room, id) as RoomProfile;
+		const res = await this.client.post(Context.Room, id) as RoomProfile;
 		if (!res) {
 			return false;
 		}
@@ -54,13 +55,5 @@ export default class Room {
 
 	getConfig(): RoomConfiguration | undefined {
 		return this.config;
-	}
-
-	async loadDriver(driverName: string): Promise<boolean> {
-		return await this.socket.put(Context.Driver, driverName) as boolean;
-	}
-
-	async unloadDriver(): Promise<boolean> {
-		return await this.socket.delete(Context.Driver) as boolean;
 	}
 }

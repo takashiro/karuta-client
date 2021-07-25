@@ -1,9 +1,22 @@
-import { Connection } from '@karuta/core';
+import {
+	Connection,
+	Context,
+	Method,
+} from '@karuta/core';
 
 class Client {
 	protected url = '';
 
 	protected socket?: Connection;
+
+	async logout(): Promise<void> {
+		if (!this.socket) {
+			return;
+		}
+
+		await this.socket.delete(Context.UserSession);
+		await this.disconnect();
+	}
 
 	/**
 	 * Gets URL of the server.
@@ -95,6 +108,38 @@ class Client {
 			return this.socket.getReadyState();
 		}
 		return WebSocket.CONNECTING;
+	}
+
+	async get(context: number, params?: unknown): Promise<unknown> {
+		return this.socket?.get(context, params);
+	}
+
+	async head(context: number, params?: unknown): Promise<unknown> {
+		return this.socket?.head(context, params);
+	}
+
+	async post(context: number, params?: unknown): Promise<unknown> {
+		return this.socket?.post(context, params);
+	}
+
+	async put(context: number, params?: unknown): Promise<unknown> {
+		return this.socket?.put(context, params);
+	}
+
+	async patch(context: number, params?: unknown): Promise<unknown> {
+		return this.socket?.patch(context, params);
+	}
+
+	async delete(context: number, params?: unknown): Promise<unknown> {
+		return this.socket?.delete(context, params);
+	}
+
+	async request(method: Method, context: number, params?: unknown): Promise<unknown> {
+		return this.socket?.request(method, context, params);
+	}
+
+	notify(method: Method, context: number, params?: unknown): void {
+		this.socket?.notify(method, context, params);
 	}
 }
 

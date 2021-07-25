@@ -79,3 +79,13 @@ describe('#isConnected()', () => {
 		expect(client.isConnected()).toBe(false);
 	});
 });
+
+describe('#logout()', () => {
+	const client = new Client();
+	const disconnect = jest.spyOn(client, 'disconnect').mockResolvedValue();
+
+	it('does nothing if it is not connected', () => {
+		client.logout();
+		expect(disconnect).not.toBeCalled();
+	});
+});
