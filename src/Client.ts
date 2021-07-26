@@ -9,15 +9,6 @@ class Client {
 
 	protected socket?: Connection;
 
-	async logout(): Promise<void> {
-		if (!this.socket) {
-			return;
-		}
-
-		await this.socket.delete(Context.UserSession);
-		await this.disconnect();
-	}
-
 	/**
 	 * Gets URL of the server.
 	 */
@@ -108,6 +99,26 @@ class Client {
 			return this.socket.getReadyState();
 		}
 		return WebSocket.CONNECTING;
+	}
+
+	/**
+	 * Log in the server.
+	 * @param name User name on the screen
+	 */
+	async login(name?: string): Promise<void> {
+		await this.post(Context.UserSession, { name });
+	}
+
+	/**
+	 * Log out the server.
+	 */
+	async logout(): Promise<void> {
+		if (!this.socket) {
+			return;
+		}
+
+		await this.socket.delete(Context.UserSession);
+		await this.disconnect();
 	}
 
 	async get(context: number, params?: unknown): Promise<unknown> {

@@ -178,6 +178,16 @@ describe('Request / Notification', () => {
 	});
 });
 
+describe('#login()', () => {
+	it('sends name', async () => {
+		const [credential] = await Promise.all([
+			waitFor(Context.UserSession, 'post'),
+			client.login('takashiro'),
+		]);
+		expect(credential).toStrictEqual({ name: 'takashiro' });
+	});
+});
+
 describe('#logout()', () => {
 	it('does nothing if it is not connected', async () => {
 		const me = new Client();
