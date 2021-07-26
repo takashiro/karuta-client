@@ -176,6 +176,16 @@ describe('Request / Notification', () => {
 		]);
 		expect(msg).toBe('Aloha!');
 	});
+
+	it('binds a context listener', async () => {
+		const post = jest.fn();
+		client.on({
+			context: Context.Message,
+			post,
+		});
+		await peer.post(Context.Message, 'This is a test.');
+		expect(post).toBeCalledWith('This is a test.');
+	});
 });
 
 describe('#login()', () => {
@@ -215,5 +225,9 @@ describe('Error Handling', () => {
 		await client.delete(6, 7);
 		await client.request(10, 20);
 		client.notify(10, 21);
+	});
+
+	it('cannot bind listeners in disconnected state', () => {
+		client.on({ context: 77 });
 	});
 });

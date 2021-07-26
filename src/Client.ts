@@ -1,6 +1,7 @@
 import {
 	Connection,
 	Context,
+	ContextListener,
 	Method,
 } from '@karuta/core';
 
@@ -121,36 +122,93 @@ class Client {
 		await this.disconnect();
 	}
 
+	/**
+	 * Send a GET request.
+	 * @param context
+	 * @param params
+	 * @returns Response from server
+	 */
 	async get(context: number, params?: unknown): Promise<unknown> {
 		return this.socket?.get(context, params);
 	}
 
+	/**
+	 * Send a HEAD request.
+	 * @param context
+	 * @param params
+	 * @returns Response from server
+	 */
 	async head(context: number, params?: unknown): Promise<unknown> {
 		return this.socket?.head(context, params);
 	}
 
+	/**
+	 * Send a POST request.
+	 * @param context
+	 * @param params
+	 * @returns Response from server
+	 */
 	async post(context: number, params?: unknown): Promise<unknown> {
 		return this.socket?.post(context, params);
 	}
 
+	/**
+	 * Send a PUT request.
+	 * @param context
+	 * @param params
+	 * @returns Response from server
+	 */
 	async put(context: number, params?: unknown): Promise<unknown> {
 		return this.socket?.put(context, params);
 	}
 
+	/**
+	 * Send a PATCH request.
+	 * @param context
+	 * @param params
+	 * @returns Response from server
+	 */
 	async patch(context: number, params?: unknown): Promise<unknown> {
 		return this.socket?.patch(context, params);
 	}
 
+	/**
+	 * Send a DELETE request.
+	 * @param context
+	 * @param params
+	 * @returns Response from server
+	 */
 	async delete(context: number, params?: unknown): Promise<unknown> {
 		return this.socket?.delete(context, params);
 	}
 
+	/**
+	 * Send a request.
+	 * @param method
+	 * @param context
+	 * @param params
+	 * @returns Response from server
+	 */
 	async request(method: Method, context: number, params?: unknown): Promise<unknown> {
 		return this.socket?.request(method, context, params);
 	}
 
+	/**
+	 * Send a notification.
+	 * @param method
+	 * @param context
+	 * @param params
+	 */
 	notify(method: Method, context: number, params?: unknown): void {
 		this.socket?.notify(method, context, params);
+	}
+
+	/**
+	 * Bind a context listener.
+	 * @param listener
+	 */
+	on(listener: ContextListener): void {
+		this.socket?.on(listener);
 	}
 }
 
