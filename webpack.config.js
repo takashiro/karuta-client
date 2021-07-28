@@ -5,7 +5,6 @@ module.exports = function config(env, argv) {
 	const mode = (argv && argv.mode) || 'production';
 	return {
 		mode,
-		target: 'node',
 		entry: {
 			index: './src/index.ts',
 		},
@@ -26,9 +25,15 @@ module.exports = function config(env, argv) {
 		output: {
 			filename: '[name].js',
 			path: path.join(__dirname, 'dist'),
-			libraryTarget: 'commonjs2',
+			library: {
+				name: '@karuta/client',
+				type: 'umd',
+			},
 			devtoolModuleFilenameTemplate: '[absolute-resource-path]',
 		},
+		externals: [
+			'events',
+		],
 		devtool: mode !== 'production' ? 'inline-source-map' : undefined,
 	};
 };
