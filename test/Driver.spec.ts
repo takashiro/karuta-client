@@ -58,7 +58,7 @@ describe('Configuration', () => {
 		patch.mockClear();
 	});
 
-	it('modifies configuration unsuccessfully', async () => {
+	it('modifies configuration successfully', async () => {
 		patch.mockResolvedValueOnce('yes');
 		const ret = await driver.updateConfig({ oh: 3 });
 		expect(patch).toBeCalledWith(Context.Driver, { oh: 3 });

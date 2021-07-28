@@ -4,10 +4,21 @@ import {
 	RoomProfile,
 	UserProfile,
 } from '@karuta/core';
+import { EventEmitter } from 'events';
 
 import Client from './Client';
 
-export default class Room {
+interface Room {
+	on(event: 'configChanged', listener: (config?: RoomConfiguration) => void): this;
+
+	once(event: 'configChanged', listener: (config?: RoomConfiguration) => void): this;
+
+	off(event: 'configChanged', listener: (config?: RoomConfiguration) => void): this;
+
+	emit(event: 'configChanged', config?: RoomConfiguration): boolean;
+}
+
+class Room extends EventEmitter {
 	protected client: Client;
 
 	protected id = 0;
@@ -17,6 +28,7 @@ export default class Room {
 	protected config?: RoomConfiguration;
 
 	constructor(client: Client) {
+		super();
 		this.client = client;
 	}
 
@@ -49,11 +61,38 @@ export default class Room {
 
 		this.id = res.id;
 		this.owner = res.owner;
-		this.config = res.config;
+		this.setConfig(res.config);
 		return true;
 	}
 
 	getConfig(): RoomConfiguration | undefined {
 		return this.config;
 	}
+
+	setConfig(config?: RoomConfiguration): void {
+		this.config = config;
+		this.emit('configChanged', config);
+	}
+
+	async updateConfig(update: Partial<RoomConfiguration>): Promise<boolean> {
+		const success = Boolean(await this.client.patch(Context.Room, update));
+		if (success) {
+			Object.assign(this.config, update);
+			this.emit('configChanged', this.config);
+		}
+		return success;
+	}
+
+	async fetchConfig(): Promise<boolean> {
+		const update = await this.client.head(Context.Room) as RoomConfiguration;
+		if (!update) {
+			return false;
+		}
+
+		this.config = update;
+		this.emit('configChanged', update);
+		return true;
+	}
 }
+
+export default Room;

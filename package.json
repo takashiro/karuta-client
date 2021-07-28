@@ -24,9 +24,11 @@
   },
   "homepage": "https://github.com/takashiro/karuta-client#readme",
   "dependencies": {
-    "@karuta/core": "^0.4.1"
+    "@karuta/core": "^0.4.1",
+    "events": "^3.3.0"
   },
   "devDependencies": {
+    "@types/events": "^3.0.0",
     "@types/jest": "^26.0.24",
     "@types/node": "^14.17.5",
     "@types/ws": "^7.4.7",

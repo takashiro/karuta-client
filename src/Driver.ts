@@ -2,10 +2,21 @@ import {
 	Context,
 	DriverProfile,
 } from '@karuta/core';
+import { EventEmitter } from 'events';
 
 import Client from './Client';
 
-export default class Driver<Config> {
+interface Driver<Config> {
+	on(event: 'configChanged', listener: (config?: Config) => void): this;
+
+	once(event: 'configChanged', listener: (config?: Config) => void): this;
+
+	off(event: 'configChanged', listener: (config?: Config) => void): this;
+
+	emit(event: 'configChanged', config?: Config): boolean;
+}
+
+class Driver<Config> extends EventEmitter {
 	protected client: Client;
 
 	protected name: string;
@@ -13,6 +24,7 @@ export default class Driver<Config> {
 	protected config?: Config;
 
 	constructor(client: Client, name: string) {
+		super();
 		this.client = client;
 		this.name = name;
 	}
@@ -48,6 +60,7 @@ export default class Driver<Config> {
 		const success = Boolean(await this.client.patch(Context.Driver, update));
 		if (success) {
 			Object.assign(this.config, update);
+			this.emit('configChanged', this.config);
 		}
 		return success;
 	}
@@ -59,6 +72,9 @@ export default class Driver<Config> {
 		}
 
 		this.config = update;
+		this.emit('configChanged', update);
 		return true;
 	}
 }
+
+export default Driver;
