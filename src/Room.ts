@@ -54,7 +54,7 @@ class Room extends EventEmitter {
 	}
 
 	async enter(id: number): Promise<boolean> {
-		const res = await this.client.post(Context.Room, id) as RoomProfile;
+		const res = await this.client.post(Context.Room, { id }) as RoomProfile;
 		if (!res) {
 			return false;
 		}
