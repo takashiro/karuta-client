@@ -212,6 +212,7 @@ describe('#logout()', () => {
 			client.logout(),
 		]);
 		expect(msg).toBeUndefined();
+		expect(client.getUid()).toBe(0);
 	});
 });
 

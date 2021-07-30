@@ -10,6 +10,8 @@ class Client {
 
 	protected socket?: Connection;
 
+	protected uid = 0;
+
 	/**
 	 * Gets URL of the server.
 	 */
@@ -103,11 +105,21 @@ class Client {
 	}
 
 	/**
+	 * @return User ID. It is 0 by default.
+	 */
+	getUid(): number {
+		return this.uid;
+	}
+
+	/**
 	 * Log in the server.
 	 * @param name User name on the screen
+	 * @return Whether login is successful.
 	 */
-	async login(name?: string): Promise<void> {
-		await this.post(Context.UserSession, { name });
+	async login(name?: string): Promise<boolean> {
+		const uid = await this.post(Context.UserSession, { name });
+		this.uid = uid as number;
+		return this.uid > 0;
 	}
 
 	/**
@@ -118,7 +130,12 @@ class Client {
 			return;
 		}
 
-		await this.socket.delete(Context.UserSession);
+		this.uid = 0;
+
+		const { socket } = this;
+		delete this.socket;
+
+		await socket.delete(Context.UserSession);
 		await this.disconnect();
 	}
 
