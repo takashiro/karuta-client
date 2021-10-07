@@ -112,6 +112,14 @@ class Client {
 	}
 
 	/**
+	 * @return Version number of server
+	 */
+	async checkVersion(): Promise<string> {
+		const version = await this.get(Context.Version);
+		return version as string;
+	}
+
+	/**
 	 * Log in the server.
 	 * @param name User name on the screen
 	 * @return Whether login is successful.

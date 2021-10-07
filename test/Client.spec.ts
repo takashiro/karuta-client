@@ -188,6 +188,15 @@ describe('Request / Notification', () => {
 	});
 });
 
+describe('#checkVersion()', () => {
+	it('checks server version', async () => {
+		await Promise.all([
+			waitFor(Context.Version, 'get'),
+			client.checkVersion(),
+		]);
+	});
+});
+
 describe('#login()', () => {
 	it('sends name', async () => {
 		const [credential] = await Promise.all([
