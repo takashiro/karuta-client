@@ -66,21 +66,11 @@ describe('#setUrl()', () => {
 describe('#connect()', () => {
 	it('refuses void parameter', async () => {
 		const me = new Client();
-		expect.assertions(1);
-		try {
-			await me.connect();
-		} catch (error) {
-			expect(error.message).toBe('No url is defined.');
-		}
+		await expect(() => me.connect()).rejects.toThrowError('No url is defined.');
 	});
 
-	it('fails if WebSocket cannot be created', async () => {
-		expect.assertions(1);
-		try {
-			await client.connect('localhost');
-		} catch (error) {
-			expect(error.message).toBe('WebSocket is not defined');
-		}
+	it('fails if WebSocket cannot be created', () => {
+		expect(() => client.connect('localhost')).toThrowError('WebSocket is not defined');
 	});
 
 	it('connects to a localhost endpoint', async () => {
