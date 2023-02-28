@@ -11,5 +11,5 @@ It connects to the server application via WebSocket.
 
 Running Environment
 -------------------
-1. Node.js v12 or later versions
+1. Node.js v18.x or later versions
 1. [karuta-server](https://github.com/takashiro/karuta-server)
