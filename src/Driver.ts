@@ -57,6 +57,9 @@ class Driver<Config> extends EventEmitter {
 	}
 
 	async updateConfig(update: Partial<Config>): Promise<boolean> {
+		if (!this.config) {
+			throw new Error('Please fetch the latest configuration first.');
+		}
 		const success = Boolean(await this.client.patch(Context.Driver, update));
 		if (success) {
 			Object.assign(this.config, update);

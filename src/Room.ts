@@ -77,6 +77,9 @@ class Room extends EventEmitter {
 	async updateConfig(update: Partial<RoomConfiguration>): Promise<boolean> {
 		const success = Boolean(await this.client.patch(Context.Room, update));
 		if (success) {
+			if (!this.config) {
+				this.config = {};
+			}
 			Object.assign(this.config, update);
 			this.emit('configChanged', this.config);
 		}
