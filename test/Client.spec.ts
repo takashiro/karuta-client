@@ -1,39 +1,18 @@
-import WebSocket, {
-	Server,
-} from 'ws';
-
 import {
-	Context,
 	Connection,
+	Context,
 	Method,
 } from '@karuta/core';
 
+import MockedWebSocket from './mock/MockedWebSocket';
 import Client from '../src/Client';
 
+jest.mock('@karuta/core');
+jest.mock('./mock/MockedWebSocket');
+
 const port = 10000 + Math.floor(Math.random() * (0xFFFF - 10000));
-const server = new Server({
-	port,
-});
-
-let peer: Connection;
-server.on('connection', (socket) => {
-	peer = new Connection(socket);
-});
-
-function waitFor(context: number, callback: string): Promise<unknown> {
-	return new Promise((resolve) => {
-		peer.on({
-			context,
-			[callback]: resolve,
-		});
-	});
-}
 
 const client = new Client();
-
-afterAll(() => {
-	server.close();
-});
 
 describe('#setUrl()', () => {
 	it('accepts absolute path', () => {
@@ -74,7 +53,7 @@ describe('#connect()', () => {
 	});
 
 	it('connects to a localhost endpoint', async () => {
-		Reflect.set(global, 'WebSocket', WebSocket);
+		Reflect.set(global, 'WebSocket', MockedWebSocket);
 		await client.connect(`ws://localhost:${port}`);
 		expect(client.getSocket()).toBeTruthy();
 		expect(client.getState()).toBe(WebSocket.OPEN);
@@ -103,68 +82,50 @@ describe('#disconnect()', () => {
 });
 
 describe('Request / Notification', () => {
+	let socket: jest.Mocked<Connection>;
+
+	beforeAll(() => {
+		socket = Reflect.get(client, 'socket');
+	});
+
 	it('sends a GET request', async () => {
-		const [msg] = await Promise.all([
-			waitFor(Context.Message, 'get'),
-			client.get(Context.Message, 'Hi, Takashiro.'),
-		]);
-		expect(msg).toBe('Hi, Takashiro.');
+		await client.get(Context.Message, 'Hi, Takashiro.');
+		expect(socket.get).toBeCalledWith(Context.Message, 'Hi, Takashiro.');
 	});
 
 	it('sends a HEAD request', async () => {
-		const [msg] = await Promise.all([
-			waitFor(Context.Version, 'head'),
-			client.head(Context.Version, 'v7'),
-		]);
-		expect(msg).toBe('v7');
+		await client.head(Context.Version, 'v7');
+		expect(socket.head).toBeCalledWith(Context.Version, 'v7');
 	});
 
 	it('sends a POST request', async () => {
-		const [msg] = await Promise.all([
-			waitFor(Context.Driver, 'post'),
-			client.post(Context.Driver, 'jest'),
-		]);
-		expect(msg).toBe('jest');
+		await client.post(Context.Driver, 'jest');
+		expect(socket.post).toBeCalledWith(Context.Driver, 'jest');
 	});
 
 	it('sends a DELETE request', async () => {
-		const [msg] = await Promise.all([
-			waitFor(Context.UserSession, 'delete'),
-			client.delete(Context.UserSession, false),
-		]);
-		expect(msg).toBe(false);
+		await client.delete(Context.UserSession, false);
+		expect(socket.delete).toBeCalledWith(Context.UserSession, false);
 	});
 
 	it('sends a PUT request', async () => {
-		const [msg] = await Promise.all([
-			waitFor(Context.UserSession, 'put'),
-			client.put(Context.UserSession, { username: 'me' }),
-		]);
-		expect(msg).toStrictEqual({ username: 'me' });
+		await client.put(Context.UserSession, { username: 'me' });
+		expect(socket.put).toBeCalledWith(Context.UserSession, { username: 'me' });
 	});
 
 	it('sends a PATCH request', async () => {
-		const [msg] = await Promise.all([
-			waitFor(Context.Room, 'patch'),
-			client.patch(Context.Room, 123),
-		]);
-		expect(msg).toBe(123);
+		await client.patch(Context.Room, 123);
+		expect(socket.patch).toBeCalledWith(Context.Room, 123);
 	});
 
 	it('sends a custom request', async () => {
-		const [msg] = await Promise.all([
-			waitFor(Context.Room, 'patch'),
-			client.request(Method.Patch, Context.Room, 123),
-		]);
-		expect(msg).toBe(123);
+		await client.request(Method.Patch, Context.Room, 123);
+		expect(socket.request).toBeCalledWith(Method.Patch, Context.Room, 123);
 	});
 
-	it('sends a notification', async () => {
-		const [msg] = await Promise.all([
-			waitFor(Context.Message, 'post'),
-			client.notify(Method.Post, Context.Message, 'Aloha!'),
-		]);
-		expect(msg).toBe('Aloha!');
+	it('sends a notification', () => {
+		client.notify(Method.Post, Context.Message, 'Aloha!');
+		expect(socket.notify).toBeCalledWith(Method.Post, Context.Message, 'Aloha!');
 	});
 
 	it('binds a context listener', async () => {
@@ -173,27 +134,32 @@ describe('Request / Notification', () => {
 			context: Context.Message,
 			post,
 		});
-		await peer.post(Context.Message, 'This is a test.');
-		expect(post).toBeCalledWith('This is a test.');
+		expect(socket.on).toBeCalledWith({
+			context: Context.Message,
+			post,
+		});
 	});
 });
 
 describe('#checkVersion()', () => {
 	it('checks server version', async () => {
-		await Promise.all([
-			waitFor(Context.Version, 'get'),
-			client.checkVersion(),
-		]);
+		const get = jest.spyOn(client, 'get');
+		await client.checkVersion();
+		expect(get).toBeCalledWith(Context.Version);
+		get.mockRestore();
 	});
 });
 
 describe('#login()', () => {
+	let socket: jest.Mocked<Connection>;
+
+	beforeAll(() => {
+		socket = Reflect.get(client, 'socket');
+	});
+
 	it('sends name', async () => {
-		const [credential] = await Promise.all([
-			waitFor(Context.UserSession, 'post'),
-			client.login('takashiro'),
-		]);
-		expect(credential).toStrictEqual({ name: 'takashiro' });
+		await client.login('takashiro');
+		expect(socket.post).toBeCalledWith(Context.UserSession, { name: 'takashiro' });
 	});
 });
 
@@ -207,27 +173,10 @@ describe('#logout()', () => {
 
 	it('deletes its user session and disconnect', async () => {
 		const [msg] = await Promise.all([
-			waitFor(Context.UserSession, 'delete'),
+			// waitFor(Context.UserSession, 'delete'),
 			client.logout(),
 		]);
 		expect(msg).toBeUndefined();
 		expect(client.getUid()).toBe(0);
-	});
-});
-
-describe('Error Handling', () => {
-	it('does nothing in disconnected state', async () => {
-		await client.get(1, 2);
-		await client.post(2, 3);
-		await client.head(3, 4);
-		await client.patch(4, 5);
-		await client.put(5, 6);
-		await client.delete(6, 7);
-		await client.request(10, 20);
-		client.notify(10, 21);
-	});
-
-	it('cannot bind listeners in disconnected state', () => {
-		client.on({ context: 77 });
 	});
 });

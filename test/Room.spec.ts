@@ -74,6 +74,17 @@ describe('#updateConfig()', () => {
 		expect(ret).toBe(true);
 		expect(room.getConfig()).toStrictEqual({ name: 'test', a: 99 });
 	});
+
+	it('can handle empty configuration', async () => {
+		patch.mockResolvedValueOnce('yes');
+		const config = room.getConfig();
+		Reflect.set(room, 'config', undefined);
+		const ret = await room.updateConfig({ name: 'test' });
+		expect(patch).toBeCalledWith(Context.Room, { name: 'test' });
+		expect(ret).toBe(true);
+		expect(room.getConfig()).toStrictEqual({ name: 'test' });
+		Reflect.set(room, 'config', config);
+	});
 });
 
 describe('#fetchConfig()', () => {

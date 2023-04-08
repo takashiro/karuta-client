@@ -66,6 +66,11 @@ describe('Configuration', () => {
 		expect(driver.getConfig()).toStrictEqual({ oh: 3 });
 	});
 
+	it('cannot update configuration before fetching it', async () => {
+		const d = new Driver(client, 'temp');
+		expect(() => d.updateConfig({})).rejects.toThrowError('Please fetch the latest configuration first.');
+	});
+
 	it('loads configuration unsuccessfully', async () => {
 		const ret = await driver.fetchConfig();
 		expect(ret).toBe(false);

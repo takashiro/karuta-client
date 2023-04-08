@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/takashiro/karuta-client#readme",
   "dependencies": {
-    "@karuta/core": "^0.4.1"
+    "@karuta/core": "^0.5.0"
   },
   "peerDependencies": {
     "events": "^3.3.0"
@@ -33,7 +33,6 @@
     "@types/events": "^3.0.0",
     "@types/jest": "^29.4.0",
     "@types/node": "^18.14.2",
-    "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.54.0",
     "@typescript-eslint/parser": "^5.54.0",
     "eslint": "^8.35.0",
@@ -44,8 +43,7 @@
     "ts-loader": "^9.4.2",
     "typescript": "^4.9.5",
     "webpack": "^5.75.0",
-    "webpack-cli": "^5.0.1",
-    "ws": "^8.12.1"
+    "webpack-cli": "^5.0.1"
   },
   "files": [
     "dist"
